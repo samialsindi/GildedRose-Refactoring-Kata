@@ -49,6 +49,7 @@ DEXTERITY_VEST = "+5 Dexterity Vest"
 AGED_BRIE = "Aged Brie"
 BACKSTAGE_PASS = "Backstage passes to a TAFKAL80ETC concert"
 SULFURAS = "Sulfuras, Hand of Ragnaros"
+CONJURED_CAKE = "Conjured Mana Cake"
 
 def update(name: str, sell_in: int, quality: int) -> Item:
     item = Item(name, sell_in, quality)
@@ -129,3 +130,31 @@ class TestWholeInventory:
                  Item(SULFURAS, 0, 80), Item(BACKSTAGE_PASS, 15, 20)]
         GildedRose(items).update_quality()
         assert [(i.sell_in, i.quality) for i in items] == [(9, 19), (1, 1), (0, 80), (14, 21)]
+
+
+
+
+class TestConjuredItems:
+    @pytest.mark.parametrize(("sell_in", "expected"), [
+        pytest.param(2, 8, id="before-sell-by-loses-two"),
+        pytest.param(1, 8, id="last-day-before-sell-by-loses-two"),
+        pytest.param(0, 6, id="sell-by-day-itself-loses-four"),
+        pytest.param(-1, 6, id="past-sell-by-loses-four"),
+    ])
+    def test_degrades_twice_as_fast_as_ordinary(self, sell_in, expected):
+        assert update(CONJURED_CAKE, sell_in, 10).quality == expected
+
+    @pytest.mark.parametrize(("sell_in", "quality"), [
+        pytest.param(5, 1, id="one-left-before-sell-by"),
+        pytest.param(0, 3, id="three-left-on-sell-by-date"),
+        pytest.param(-1, 2, id="two-left-past-sell-by"),
+    ])
+    def test_quality_never_negative(self, sell_in, quality):
+        assert update(CONJURED_CAKE, sell_in, quality).quality == 0
+
+    def test_sell_in_still_counts_down(self):
+        assert update(CONJURED_CAKE, 3, 6).sell_in == 2
+
+    def test_any_name_starting_with_conjured_is_conjured(self):
+        # Inventory carries "Conjured Mana Cake", prefix on a product name. Check this works for other items also.
+        assert update("Conjured Health Potion", 5, 10).quality == 8
