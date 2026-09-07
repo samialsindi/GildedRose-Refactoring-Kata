@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from abc import ABC, abstractmethod
+
 AGED_BRIE = "Aged Brie"
 BACKSTAGE_PASS = "Backstage passes to a TAFKAL80ETC concert"
 SULFURAS = "Sulfuras, Hand of Ragnaros"
@@ -15,33 +17,28 @@ def _lower_quality(item, amount=1):
     if item.quality > MIN_QUALITY:
         item.quality = max(item.quality - amount, MIN_QUALITY)
 
-class ItemUpdater:
+class ItemUpdater(ABC):
     'Age the quality, move a day closer, and if the date has passed, age again'
-
     def update(self, item):
         self._age(item)
         item.sell_in -= 1
-
         if item.sell_in < 0:
             self._age_past_sell_by(item)
 
+    @abstractmethod
     def _age(self, item):
-        raise NotImplementedError
+         'Age by 1 day'
 
     def _age_past_sell_by(self, item):
         self._age(item)
 
 class DegradingItemUpdater(ItemUpdater):
     RATE = 1
-
     def _age(self, item):
         _lower_quality(item, self.RATE)
 
-class ConjuredItemUpdater(ItemUpdater):
+class ConjuredItemUpdater(DegradingItemUpdater):
     RATE = 2
-
-    def _age(self, item):
-        _lower_quality(item, self.RATE)
 
 class AgedBrieUpdater(ItemUpdater):
     def _age(self, item):
@@ -58,6 +55,9 @@ class BackstagePassUpdater(ItemUpdater):
 class LegendaryItemUpdater(ItemUpdater):
     def update(self, item):
         """Nothing moves, not even the sell-by date."""
+
+    def _age(self, item):
+        """Unreachable: a legendary item never ages."""
 
 updaters = {
     AGED_BRIE: AgedBrieUpdater(),
