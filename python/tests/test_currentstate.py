@@ -15,7 +15,7 @@ ITEM_NAMES = [
     "Conjured Mana Cake",
 ]
 
-SELL_IN_VALUES = range(12, -3, -1) # Straddles every threshold - 11/10 and 6/5 backstage tiers, and the sel-by boundary
+SELL_IN_VALUES = range(12, -3, -1) # Straddles every threshold - 11/10 and 6/5 backstage tiers, and the sell-by boundary
  
 # Floor, mid-range, both sides of the cap, and one out-of-range value (51)
 QUALITY_VALUES = [0, 1, 2, 3, 6, 10, 48, 49, 50, 51]
