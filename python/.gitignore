@@ -1,6 +1,17 @@
-*.pyc
+# Virtualenv
+guildrose/
+
+# Bytecode
+__pycache__/
+*.py[cod]
+
+# Test / coverage artifacts
+.pytest_cache/
+.approval_tests_temp/
 .cache
 .coverage
-.idea/
-*.iml
-uv.lock
+htmlcov/
+*.received.*
+
+# macOS
+.DS_Store
