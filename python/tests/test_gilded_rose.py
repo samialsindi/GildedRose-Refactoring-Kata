@@ -131,9 +131,6 @@ class TestWholeInventory:
         GildedRose(items).update_quality()
         assert [(i.sell_in, i.quality) for i in items] == [(9, 19), (1, 1), (0, 80), (14, 21)]
 
-
-
-
 class TestConjuredItems:
     @pytest.mark.parametrize(("sell_in", "expected"), [
         pytest.param(2, 8, id="before-sell-by-loses-two"),
