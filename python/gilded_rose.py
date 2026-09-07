@@ -6,52 +6,72 @@ SULFURAS = "Sulfuras, Hand of Ragnaros"
 MIN_QUALITY = 0
 MAX_QUALITY = 50
 
-class GildedRose(object):
+def _raise_quality(item, amount=1):
+    # Cap restrains increases; it does not pull an out-of-range value down.
+    if item.quality < MAX_QUALITY:
+        item.quality = min(item.quality + amount, MAX_QUALITY)
 
+def _lower_quality(item, amount=1):
+    if item.quality > MIN_QUALITY:
+        item.quality = max(item.quality - amount, MIN_QUALITY)
+
+class ItemUpdater:
+    'Age the quality, move a day closer, and if the date has passed, age again'
+
+    def update(self, item):
+        self._age(item)
+        item.sell_in -= 1
+
+        if item.sell_in < 0:
+            self._age_past_sell_by(item)
+
+    def _age(self, item):
+        raise NotImplementedError
+
+    def _age_past_sell_by(self, item):
+        self._age(item)
+
+class DegradingItemUpdater(ItemUpdater):
+    RATE = 1
+
+    def _age(self, item):
+        _lower_quality(item, self.RATE)
+
+class AgedBrieUpdater(ItemUpdater):
+    def _age(self, item):
+        _raise_quality(item)
+
+class BackstagePassUpdater(ItemUpdater):
+    def _age(self, item):
+        days = item.sell_in
+        _raise_quality(item, 3 if days <= 5 else 2 if days <= 10 else 1)
+
+    def _age_past_sell_by(self, item):
+        item.quality = MIN_QUALITY
+
+class LegendaryItemUpdater(ItemUpdater):
+    def update(self, item):
+        """Nothing moves, not even the sell-by date."""
+
+updaters = {
+    AGED_BRIE: AgedBrieUpdater(),
+    BACKSTAGE_PASS: BackstagePassUpdater(),
+    SULFURAS: LegendaryItemUpdater(),
+}
+
+def updater_for(name):
+    updater = updaters.get(name)
+    if updater is not None:
+        return updater
+    return DegradingItemUpdater()
+
+class GildedRose(object):
     def __init__(self, items):
         self.items = items
 
     def update_quality(self):
         for item in self.items:
-            self._update_item(item)
-
-    def _update_item(self, item):
-        if item.name == SULFURAS:
-            return
-        if item.name == AGED_BRIE:
-            self._update_aged_brie(item)
-        elif item.name == BACKSTAGE_PASS:
-            self._update_backstage_pass(item)
-        else:
-            self._update_ordinary_item(item)
-
-    @staticmethod
-    def _update_ordinary_item(item):
-        if item.quality > MIN_QUALITY:
-            item.quality -= 1
-        item.sell_in -= 1
-        if item.sell_in < 0 and item.quality > MIN_QUALITY:
-            item.quality -= 1
-
-    @staticmethod
-    def _update_aged_brie(item):
-        if item.quality < MAX_QUALITY:
-            item.quality += 1
-        item.sell_in -= 1
-        if item.sell_in < 0 and item.quality < MAX_QUALITY:
-            item.quality += 1
-
-    @staticmethod
-    def _update_backstage_pass(item):
-        if item.quality < MAX_QUALITY:
-            item.quality += 1
-            if item.sell_in < 11 and item.quality < MAX_QUALITY:
-                item.quality += 1
-            if item.sell_in < 6 and item.quality < MAX_QUALITY:
-                item.quality += 1
-        item.sell_in -= 1
-        if item.sell_in < 0:
-            item.quality = MIN_QUALITY
+            updater_for(item.name).update(item)
 
 class Item:
     def __init__(self, name, sell_in, quality):
