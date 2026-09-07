@@ -37,6 +37,12 @@ class DegradingItemUpdater(ItemUpdater):
     def _age(self, item):
         _lower_quality(item, self.RATE)
 
+class ConjuredItemUpdater(ItemUpdater):
+    RATE = 2
+
+    def _age(self, item):
+        _lower_quality(item, self.RATE)
+
 class AgedBrieUpdater(ItemUpdater):
     def _age(self, item):
         _raise_quality(item)
@@ -63,7 +69,10 @@ def updater_for(name):
     updater = updaters.get(name)
     if updater is not None:
         return updater
-    return DegradingItemUpdater()
+    if name.startswith('Conjured'):
+        return ConjuredItemUpdater()
+    else:
+        return DegradingItemUpdater()
 
 class GildedRose(object):
     def __init__(self, items):
