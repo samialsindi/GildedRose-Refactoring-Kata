@@ -20,7 +20,7 @@ SELL_IN_VALUES = range(12, -3, -1) # Straddles every threshold - 11/10 and 6/5 b
 # Floor, mid-range, both sides of the cap, and one out-of-range value (51)
 QUALITY_VALUES = [0, 1, 2, 3, 6, 10, 48, 49, 50, 51]
 
-def after_one_day(name: str, sell_in: int, quality: int) -> Item:
+def _after_one_day(name: str, sell_in: int, quality: int) -> Item:
     item = Item(name, sell_in, quality)
     GildedRose([item]).update_quality()
     return item
